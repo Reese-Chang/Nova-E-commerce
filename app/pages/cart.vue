@@ -284,7 +284,6 @@ async function handleCheckout() {
         }
       } catch (err: any) {
         console.error('付款 API 錯誤:', err)
-        console.log("287",err.data.message);
         
         isLoading.value = false
         alert('結帳失敗：' + (err?.data?.message || err.message || '未知錯誤'))

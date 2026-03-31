@@ -34,5 +34,9 @@ export default defineNuxtConfig({
         transformAssetUrls,
       },
     },
+    esbuild: {
+      // 只要是打包上線的環境 (Production)，就直接砍掉所有的 console 和 debugger
+      drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
+    }
   }
 })

@@ -39,7 +39,6 @@ export default defineEventHandler(async (event) => {
   const requestUrl = getRequestURL(event)
   const SITE_URL = config.siteUrl
     || `${requestUrl.protocol}//${requestUrl.host}`
-  console.log("35", SITE_URL);
 
   // 確認環境變數已設定
   if (!PARTNER_KEY || !MERCHANT_ID) {
@@ -64,7 +63,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  console.log(`📦 收到付款請求：金額 ${amount}，prime: ${prime.substring(0, 10)}...`)
 
   // ──────────────────────────────────────────────────────────
   // Step 2: 組裝 TapPay「Pay by Prime」請求
@@ -72,7 +70,6 @@ export default defineEventHandler(async (event) => {
   // API 文件：https://docs.tappaysdk.com/tutorial/zh/back.html
   const TAPPAY_API_URL = 'https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime'
   // ⚠️ 正式環境請改為：'https://prod.tappaysdk.com/tpc/payment/pay-by-prime'
-  console.log("68");
 
   const payload = {
     // ── 必填欄位 ─────────────────────────────────────────
@@ -101,7 +98,6 @@ export default defineEventHandler(async (event) => {
       backend_notify_url: `${SITE_URL}/api/pay-notify`,
     },
   }
-  console.log("97", payload);
 
   // ──────────────────────────────────────────────────────────
   // Step 3: 呼叫 TapPay API
@@ -115,9 +111,6 @@ export default defineEventHandler(async (event) => {
       },
       body: payload,
     })
-    console.log("109", response);
-
-    console.log('📨 TapPay 回應:', JSON.stringify(response, null, 2))
 
     // ────────────────────────────────────────────────────────
     // Step 4: 檢查回應結果
