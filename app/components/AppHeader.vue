@@ -176,9 +176,9 @@ const navItems: NavItem[] = [
       { label: '貓貓專區', to: '/collections?type=cat' },
       { label: '小動物專區', to: '/collections?type=small' },
     ],
-  },
-  { label: '最新消息', to: '/news' },
-  { label: '關於我們', to: '/about' },
+  }
+  // { label: '最新消息', to: '/news' },
+  // { label: '關於我們', to: '/about' },
 ]
 </script>
 

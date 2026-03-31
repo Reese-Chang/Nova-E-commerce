@@ -25,9 +25,9 @@ export const useProductList = (): ProductList => ({
             imageUrl: '/images/prod-001.png',
             salesCountText: '已銷售：40萬～50萬',
             price: {
-                original: 1980,
-                sale: 1703,
-                discountAmount: 277,
+                original: 50,
+                sale: 1,
+                discountAmount: 49,
             },
             attributeTags: ['專屬狗狗', '腸胃敏感'],
             statusTags: ['熱銷', '新品'],

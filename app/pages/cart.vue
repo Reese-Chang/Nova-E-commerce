@@ -1,5 +1,10 @@
 <template>
   <div class="cart-page">
+    <div v-if="isLoading" class="loadingBg">
+      <v-progress-circular  indeterminate></v-progress-circular> <br>
+      <div>下單中，請稍後...</div>
+    </div>
+    
     <!-- ── 頁頭 ── -->
     <section class="page-header">
       <h1 class="page-title">購物車</h1>
@@ -175,44 +180,141 @@
 import { useCartStore } from '~/stores/useCartStore'   // 購物車 Store
 import { useAuthStore } from '~/stores/useAuthStore'   // 登入狀態 Store
 
+// loading
+const isLoading = ref(false)
+// ── 宣告 TapPay SDK 全域變數 ──────────────────────────────
+declare const TPDirect: any
+
+// ── TapPay 設定（⚠️ 請替換為你自己的值）──────────────────
+const TAPPAY_APP_ID = 168019           // ← 換成你的 APP_ID
+const TAPPAY_APP_KEY = 'app_VwIddaIaOzao8R2PjdQNknz6POnnnrTfocT6m36NOSaMMtSN9IBAXHSOJk3r' // ← 換成你的 APP_KEY
+const TAPPAY_ENV = 'sandbox'          // 'sandbox' 或 'production'
+
+// ── 載入 TapPay SDK ───────────────────────────────────────
+useHead({
+  script: [
+    { src: 'https://js.tappaysdk.com/sdk/tpdirect/v5.14.0', defer: true }
+  ]
+})
+
 // ── 取得 Pinia store 實例 ─────────────────────────────────
-/**
- * cartStore  → 管理購物車品項（items、totalPrice、totalCount 等）
- * authStore  → 管理登入狀態（isLoggedIn、userDisplayName 等）
- */
 const cartStore = useCartStore()
 const authStore = useAuthStore()
 
-// ── 頁面初始化時還原登入狀態 ─────────────────────────────
-// authStore.init() 會讀取 localStorage 裡儲存的 token 與 user 資料
-// 避免頁面重整後顯示「未登入」
+// ── 是否正在結帳中（防止重複點擊）──────────────────────────
+const isCheckingOut = ref(false)
+
+// ── 頁面初始化 ────────────────────────────────────────────
 onMounted(() => {
   authStore.init()
+
+  // 等待 TapPay SDK 載入完成後初始化
+  const waitForSDK = setInterval(() => {
+    if (typeof TPDirect !== 'undefined') {
+      clearInterval(waitForSDK)
+      TPDirect.setupSDK(TAPPAY_APP_ID, TAPPAY_APP_KEY, TAPPAY_ENV)
+      console.log('✅ TapPay SDK 初始化完成')
+    }
+  }, 100)
 })
 
-// ── 清空購物車（帶確認提示）─────────────────────────────────
-/**
- * confirmClear：清空購物車前，用原生 confirm 讓使用者二次確認
- * （實際專案可替換為 Dialog 元件）
- */
+// ── 清空購物車（帶確認提示）──────────────────────────────
 function confirmClear() {
   if (window.confirm('確定要清空購物車嗎？')) {
     cartStore.clearCart()
   }
 }
 
-// ── 結帳（模擬）────────────────────────────────────────────
+// ── 結帳：TapPay LINE Pay ────────────────────────────────
 /**
- * handleCheckout：結帳按鈕點擊事件
- * 這裡先用 alert 模擬，實際接上後端 API 後替換即可
+ * handleCheckout：
+ * 1. 呼叫 TPDirect.linePay.getPrime() 取得 prime
+ * 2. 將 prime 傳送至後端 /api/pay
+ * 3. 後端回傳 payment_url 後，導向 LINE Pay 付款頁面
  */
-function handleCheckout() {
-  alert('感謝您的購買！\n（這是模擬結帳，實際功能請串接金流 API）')
-  cartStore.clearCart() // 結帳完成後清空購物車
+async function handleCheckout() {
+  console.log("229",isCheckingOut);
+  
+  if (isCheckingOut.value) return
+  isCheckingOut.value = true
+
+  try {
+    isLoading.value = true
+    // 確認 SDK 已載入
+    if (typeof TPDirect === 'undefined') {
+      alert('金流 SDK 尚未載入完成，請稍後再試')
+      isLoading.value = false
+      isCheckingOut.value = false
+      return
+    }
+
+    // Step 1: 取得 LINE Pay prime
+    TPDirect.linePay.getPrime(async (result: any) => {
+      console.log("224",result);
+      
+      if (result.status !== 0) {
+        alert('取得 LINE Pay 付款資訊失敗：' + result.msg)
+        isLoading.value = false
+        isCheckingOut.value = false
+        return
+      }
+
+      console.log('✅ 取得 prime:', result.prime)
+
+      try {
+        console.log("255");
+        
+        // Step 2: 將 prime 送至後端
+        const payResult: any = await $fetch('/api/pay', {
+          method: 'POST',
+          body: {
+            prime: result.prime,
+            amount: cartStore.totalPrice,
+            details: `Nova Pet 寵物商品 x${cartStore.totalCount}`,
+          }
+        })
+        
+        // Step 3: 導向 LINE Pay 付款頁面
+        if (payResult.payment_url) {
+          TPDirect.redirect(payResult.payment_url)
+          isLoading.value = false
+        } else {
+          isLoading.value = false
+          alert('無法取得付款頁面連結，請稍後再試')
+        }
+      } catch (err: any) {
+        console.error('付款 API 錯誤:', err)
+        console.log("287",err.data.message);
+        
+        isLoading.value = false
+        alert('結帳失敗：' + (err?.data?.message || err.message || '未知錯誤'))
+      } finally {
+        isCheckingOut.value = false
+        isLoading.value = false
+      }
+    })
+  } catch (err) {
+    isLoading.value = false
+    console.error('結帳流程錯誤:', err)
+    isCheckingOut.value = false
+  }
 }
 </script>
 
 <style scoped>
+.loadingBg {
+  background-color: rgba(128, 128, 128, 0.8);
+  position: absolute;
+  width: 100vw;
+  min-height: 100vh;
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 0px;
+  flex-direction: column;
+}
 /* ── Page Base ── */
 .cart-page {
   min-height: 100vh;
