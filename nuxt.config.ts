@@ -15,6 +15,7 @@ export default defineNuxtConfig({
     // 🔒 以下只在 server 端可用（安全）
     tappayPartnerKey: '',   // 從 .env 的 NUXT_TAPPAY_PARTNER_KEY 讀取
     tappayMerchantId: '',   // 從 .env 的 NUXT_TAPPAY_MERCHANT_ID 讀取
+    siteUrl: '',            // 從 .env 的 NUXT_SITE_URL 讀取（LINE Pay 回調用）
   },
 
   modules: [

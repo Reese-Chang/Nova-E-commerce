@@ -32,7 +32,14 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const PARTNER_KEY = config.tappayPartnerKey
   const MERCHANT_ID = config.tappayMerchantId
-  console.log("35");
+
+  // 動態取得網站網址（優先使用環境變數，否則從請求中偵測）
+  // 本地開發時 getRequestURL 會是 http://localhost:3000，但 TapPay 不接受 http
+  // 因此建議在 .env 設定 NUXT_SITE_URL 為正式站網址
+  const requestUrl = getRequestURL(event)
+  const SITE_URL = config.siteUrl
+    || `${requestUrl.protocol}//${requestUrl.host}`
+  console.log("35", SITE_URL);
 
   // 確認環境變數已設定
   if (!PARTNER_KEY || !MERCHANT_ID) {
@@ -90,9 +97,8 @@ export default defineEventHandler(async (event) => {
     // frontend_redirect_url：付款完成後，LINE Pay 會把使用者導回這個網址
     // backend_notify_url：TapPay 會在背景通知這個網址付款結果（選填）
     result_url: {
-      frontend_redirect_url: 'http://localhost:3000/payResult',
-      // backend_notify_url: 'http://localhost:3000/api/pay-notify',
-      backend_notify_url: 'https://nova-e-commerce-sage.vercel.app/api/pay-notify'
+      frontend_redirect_url: `${SITE_URL}/payResult`,
+      backend_notify_url: `${SITE_URL}/api/pay-notify`,
     },
   }
   console.log("97", payload);
