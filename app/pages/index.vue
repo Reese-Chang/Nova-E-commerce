@@ -7,7 +7,6 @@
 <script setup lang="ts">
     // 直接跳轉到 /home
     navigateTo('/home')
-
 </script>
 
 <style scoped>

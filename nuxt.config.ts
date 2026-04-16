@@ -25,7 +25,8 @@ export default defineNuxtConfig({
         config.plugins.push(vuetify({ autoImport: true }))
       })
     },
-    '@pinia/nuxt'
+    '@pinia/nuxt',
+    '@nuxtjs/supabase',
     //...
   ],
   vite: {
@@ -38,5 +39,8 @@ export default defineNuxtConfig({
       // 只要是打包上線的環境 (Production)，就直接砍掉所有的 console 和 debugger
       drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
     }
+  },
+  supabase: {
+    redirect: false // 完全關閉預設的跳轉行為
   }
 })

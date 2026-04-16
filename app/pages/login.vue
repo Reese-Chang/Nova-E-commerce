@@ -191,6 +191,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/useAuthStore'
 import type { LoginForm, RegisterForm, FormErrors } from '~/types/login'
 
+
 const router = useRouter()
 const authStore = useAuthStore()
 

@@ -20,14 +20,6 @@ export interface User {
     avatarUrl?: string;
 }
 
-// ── API 回應格式 ──────────────────────────────
-export interface AuthResponse {
-    success: boolean;
-    message: string;
-    user?: User;
-    token?: string;
-}
-
 // ── 表單欄位驗證錯誤 ──────────────────────────
 export interface FormErrors {
     name?: string;
